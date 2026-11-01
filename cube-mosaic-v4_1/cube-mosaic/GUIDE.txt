@@ -1,0 +1,129 @@
+CUBE MOSAIC GENERATOR - GUIDE
+=============================
+
+What the program does
+---------------------
+It turns a photo into a wall of Rubik's cubes. Every cube shows one face, and every sticker on that face is one
+"pixel" of the picture. Only the six cube colors are used, and every sticker position always gets one of them.
+
+Typical workflow
+----------------
+1. Photo: choose the picture.
+2. Cube and size: pick the cube type and the maximum space (meters).
+3. Press Generate. A pop-up shows the result and asks "Is this good?".
+4. In the pop-up: look at the views, fix details with flips, then Accept (saves the files), Adjust (back to the
+   settings; your flips are kept) or Cancel.
+
+THE SETTINGS WINDOW
+-------------------
+
+Photo
+  Any png, jpg, jpeg and similar files. Phone photos are rotated the right way up automatically. If the picture does
+  not have exactly the shape of the cube grid, a thin strip is cropped (about 7% at most when the program can help it);
+  the summary prints how much.
+
+Cube and size
+  Cube type      2x2 to 7x7. Choosing one loads its usual size. More stickers per cube = finer detail per cube.
+  Cube size      Edge length in mm. Brands differ by a millimeter or two; set yours.
+  Sticker size   The colored square. Making stickers smaller shows more black frame, so every color looks darker.
+  Padding        The frame gap = pitch minus sticker. Sticker and padding change each other; edit either.
+  Pitch          Cube size divided by the cube type: the distance from one sticker center to the next.
+  Maximum width/height   The space you have, in meters. The program picks the biggest grid of whole cubes that fits.
+                         A larger space means more cubes and more detail.
+
+Sticker colors (hex)
+  The six colors as your cubes really are (standard Rubik's colors by default). Click the swatch for a color picker.
+  A red border around a swatch means the text is not a valid hex code.
+  The program matches the photo against how the colors LOOK from a distance, which is a blend of sticker and frame,
+  not against the raw hex codes. So matching your real colors matters.
+
+Frame
+  Opaque                  Solid plastic (usually black). Pick its color.
+  Translucent             Opacity and "color seen through it". A translucent white frame over a black core looks gray.
+  Frameless / stickerless The colored plastic is the pixel. Only a thin seam shows: set its width and color.
+  Light frames make colors look lighter and less contrasty; black frames make them darker and richer.
+
+Viewing distance
+  Tick "Use the recommended distance", or untick it and type where people will stand (meters).
+  The program works out a comfortable range from the mosaic size (the whole picture should fill roughly 20 to 60
+  degrees of view, best about 40). If your distance falls outside it, the pop-up shows an orange note with the
+  recommended distance. The note also says whether neighbouring stickers will visually merge from your distance.
+
+Color matching and dithering
+  Lightness weight   1 = plain. Lower (0.4 to 0.7) makes the program care less about light/dark and more about
+                     which color family the photo has.
+  Hue guard          0 = off. At 70, a colorful part of the photo may only get a sticker within 70 degrees of its hue.
+                     This is the main cure for blue things turning green. Light blues become white instead.
+  Guard ignores grays below chroma   Near-grays have no real hue; below this value the guard stays out of the way.
+  Per-color nudge    One box per color, in the order W Y R O B G. A positive number makes that color used LESS,
+                     a negative one makes it used MORE. 0.002 is gentle, 0.01 strong.
+                     "All targets" applies everywhere; "Near-gray targets only" only to grays.
+                     Grays have no matching sticker, and mid-grays tend to turn green. Penalising green for grays
+                     sends them to orange or red instead, so it is a taste choice.
+                     A very large nudge only means "never use this color"; the replacement is whatever is next best,
+                     not necessarily the color you wanted. For an exact swap use the flip tools below.
+  Dithering          Mixes neighbouring colors so smooth gradients look smooth from far away. Automatic follows the
+                     viewing distance: none when stickers are clearly visible (close up it would just look grainy),
+                     full when they blend together (far away). You can force Off, Full, or set the strength yourself.
+
+Output folder
+  Where Accept writes the files (see the end of this guide).
+
+THE "IS THIS GOOD?" POP-UP
+--------------------------
+Note at the top      Green = your viewing distance is fine, orange = it clashes (with the recommended distance),
+                     slate = no distance given.
+Views                Build view: real stickers on the frame, as it will be built.
+                     From far: each sticker blended with its frame, roughly the look from a distance.
+                     Original photo: the cropped photo, for comparing.
+                     Original | From far: both side by side.
+                     Flip changes: only the stickers changed by your flip rules are bright.
+Zoom and move        Mouse wheel zooms around the pointer. Hold the right (or middle) button and drag to move the
+                     picture. The Zoom +, Zoom - and Fit buttons do the same without a wheel.
+                     When zoomed in, thin lines show stickers and thick lines show cubes.
+Reading the picture  Move the pointer over the mosaic: the line under it names the sticker, its current color and
+                     the cube column and row.
+Selecting            Drag with the left button to select a rectangle, or click to select one sticker. The selection
+                     always snaps to whole stickers, so what is highlighted is exactly what a flip will change.
+                     Rectangles can be drawn in every view except the side-by-side one.
+
+Exact color flip / paint (right side of the pop-up)
+  Pick a source color, a target color, optionally select an area, and press Add flip.
+  X becomes Y   Every sticker of color X in the area becomes Y. Nothing else moves.
+  Any color     Choose "Any color (paint)" as the source to paint the whole selection with the target color,
+                whatever it was. Select a single sticker to repaint just that one.
+  No area       Without a selection the rule covers the whole mosaic.
+  Swapping      B becomes G together with G becomes B swaps the two colors. Rules never read each other's results,
+                so B becomes G followed by G becomes R does NOT turn blue into red.
+  Overlaps      If two rules claim the same sticker, the later one in the list wins.
+  Switching off Untick a rule to ignore it, or remove it. Sticker counts and the saved files always use the result
+                AFTER the flips.
+  Keep in mind  Flip rectangles are in sticker coordinates. If you change the cube type or the size limits, the grid
+                changes and old rectangles no longer match the picture.
+
+SAVED FILES (Accept)
+--------------------
+preview.png             Mosaic with the viewing-distance note on top.
+preview_clean.png       The mosaic alone.
+perceived.png           The blended "from far" look.
+indices.npy             The answer: one number per sticker (0 W, 1 Y, 2 R, 3 O, 4 B, 5 G), flips included.
+indices_before_flips.npy, flips.txt   Only when flips exist: the result before flips, and the rules in command-line form.
+
+COMMAND LINE (same engine as the GUI)
+-------------------------------------
+python -m cubemosaic.cli photo.jpg --n 3 --max-w-m 2 --max-h-m 1.5 --hue-guard-deg 70 --flip B=G --compare
+python -m cubemosaic.diagnose --hue-guard-deg 70      (shows which sticker each hue and lightness will get)
+--flip X=Y   --flip G=B@x0,y0,x1,y1   --flip "*=R@10,5,11,6" (paints one sticker; quote the *)
+
+GOOD STARTING POINTS
+--------------------
+* Blue things turn green: hue guard 70.
+* Grays turn green: nudge near-gray G to about 0.02 and see which cast you prefer.
+* Result looks noisy up close: set dithering to Off, or use the automatic setting with the real viewing distance.
+* Result looks flat and banded far away: dithering Full.
+* One small area is wrong: zoom in, select it, flip it or paint it.
+
+PLANNED (see NOTES.md)
+----------------------
+Interactive guide pages with a fixed demo picture and a live generated one, so each control's effect can be seen,
+are planned after v6. This text file is the stand-in until then.
